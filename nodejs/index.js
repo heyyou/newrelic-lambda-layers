@@ -32,8 +32,8 @@ function getHandlerPath() {
     )
   }
 
-  const handlerToWrap = parts[parts.length - 1]
-  const moduleToImport = handler.slice(0, handler.lastIndexOf('.'))
+  const handlerToWrap = parts.slice(1).join('.')
+  const moduleToImport = handler.slice(0, handler.indexOf('.'))
   return { moduleToImport, handlerToWrap }
 }
 
@@ -117,14 +117,14 @@ if (process.env.NEW_RELIC_USE_ESM === 'true') {
 }
 
 async function getHandler() {
-  const userHandler = (await getModuleWithImport(LAMBDA_TASK_ROOT, moduleToImport))[handlerToWrap]
+  const userHandler = handlerToWrap.split('.').reduce((acc, key) => acc[key], (await getModuleWithImport(LAMBDA_TASK_ROOT, moduleToImport)))
   validateHandlerDefinition(userHandler, handlerToWrap, moduleToImport)
 
   return userHandler
 }
 
 function getHandlerSync() {
-  const userHandler = getModuleWithRequire(LAMBDA_TASK_ROOT, moduleToImport)[handlerToWrap]
+  const userHandler = handlerToWrap.split('.').reduce((acc, key) => acc[key], getModuleWithRequire(LAMBDA_TASK_ROOT, moduleToImport))
   validateHandlerDefinition(userHandler, handlerToWrap, moduleToImport)
 
   return userHandler
